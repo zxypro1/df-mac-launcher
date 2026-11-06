@@ -1,0 +1,58 @@
+name: Build and Release macOS DMG
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Release tag name (e.g. v0.0.1)'
+        required: false
+        default: 'v0.0.1'
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    name: Build Universal macOS App & DMG
+    runs-on: macos-14
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build Universal App and DMG
+        run: |
+          mkdir -p dist
+          chmod +x src/build_app.sh src/build_dmg.sh
+          zsh src/build_dmg.sh "$PWD/dist"
+          cd dist
+          ditto -c -k --sequesterRsrc --keepParent "Dwarf Fortress Launcher.app" "Dwarf_Fortress_Launcher_Mac.zip"
+          shasum -a 256 Dwarf_Fortress_Launcher_Mac.dmg Dwarf_Fortress_Launcher_Mac.zip > SHA256SUMS.txt
+          ls -lh "$PWD"
+
+      - name: Upload Artifacts to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_type == 'tag' && github.ref_name || inputs.tag_name || 'v0.0.1' }}
+          name: "Dwarf Fortress Mac Launcher ${{ github.ref_type == 'tag' && github.ref_name || inputs.tag_name || 'v0.0.1' }}"
+          generate_release_notes: true
+          body: |
+            ## Dwarf Fortress Mac Launcher (${{ github.ref_type == 'tag' && github.ref_name || inputs.tag_name || 'v0.0.1' }})
+
+            Native Universal (`arm64` + `x86_64`) macOS Launcher for **Dwarf Fortress (Classic & Steam Edition)**.
+
+            ### Highlights
+            - **Zero Pre-installed Dependencies**: Automatically detects and installs **Rosetta 2**, **Wine 11.21 (Metal/MoltenVK)**, and initializes the 64-bit Wine container in-app.
+            - **All Apple Silicon & Intel Macs**: Supports M1 / M2 / M3 / M4 series and Intel Macs.
+            - **Classic & Steam Edition (975370)**: Supports local game folders, 1-click Steam Console depot download, and SteamCMD.
+            - **DFHack & DFCN Localization**: 1-click install & independent toggles via `dfhooks.dll` multiplexer.
+            - **Mod & Steam Workshop Manager**: Import `.zip`/folder mods or sync from Steam Workshop.
+            - **Bilingual UI**: Default English (`EN`) with instant `中文` switch.
+          files: |
+            dist/Dwarf_Fortress_Launcher_Mac.dmg
+            dist/Dwarf_Fortress_Launcher_Mac.zip
+            dist/SHA256SUMS.txt
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
