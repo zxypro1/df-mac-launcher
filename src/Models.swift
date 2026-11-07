@@ -101,15 +101,6 @@ final class LauncherViewModel: ObservableObject {
     @Published var customMods: [DFMod] = []
     @Published var vanillaMods: [DFMod] = []
     
-    // SteamCMD Helper
-    @Published var steamUsername: String = UserDefaults.standard.string(forKey: "df_steam_username") ?? "" {
-        didSet {
-            UserDefaults.standard.set(steamUsername, forKey: "df_steam_username")
-        }
-    }
-    @Published var steamGuardCode: String = ""
-    @Published var isDownloadingSteam: Bool = false
-    
     private var gameProcess: Process?
     private var logTimer: Timer?
     
@@ -966,36 +957,26 @@ final class LauncherViewModel: ObservableObject {
         steamPath = targetDir
         UserDefaults.standard.set(steamPath, forKey: "df_steam_path")
         
-        let loginUser = steamUsername.trimmingCharacters(in: .whitespacesAndNewlines)
-        let presetCode = steamGuardCode.trimmingCharacters(in: .whitespacesAndNewlines)
         let steamCmdDir = (runtimeRootDir as NSString).appendingPathComponent("steamcmd")
         let scriptPath = (runtimeRootDir as NSString).appendingPathComponent("download_steam_df.command")
+        let escapedSteamCmdDir = steamCmdDir.replacingOccurrences(of: "'", with: "'\\''")
+        let escapedTargetDir = targetDir.replacingOccurrences(of: "'", with: "'\\''")
         
         let scriptContent = """
         #!/bin/zsh
         set -e
-        mkdir -p "\(steamCmdDir)"
-        mkdir -p "\(targetDir)"
-        cd "\(steamCmdDir)"
+        STEAMCMD_DIR='\(escapedSteamCmdDir)'
+        TARGET_DIR='\(escapedTargetDir)'
+        mkdir -p "$STEAMCMD_DIR" "$TARGET_DIR"
+        cd "$STEAMCMD_DIR"
         if [ ! -f "./steamcmd.sh" ]; then
-            curl -sqL "https://steamcdn-a.akamaihd.net/client/installer/steamcmd_osx.tar.gz" | tar zxvf -
+            curl -fsSL "https://steamcdn-a.akamaihd.net/client/installer/steamcmd_osx.tar.gz" | tar zxf -
         fi
-        STEAM_USER="\(loginUser)"
-        if [ -z "$STEAM_USER" ]; then
-            echo -n "Steam Username: "
-            read -r STEAM_USER
-        fi
-        echo -n "Steam Password: "
-        read -rs STEAM_PASS
-        echo ""
-        STEAM_CODE="\(presetCode)"
-        if [ -z "$STEAM_CODE" ]; then
-            echo -n "Steam Guard 5-digit Code: "
-            read -r STEAM_CODE
-        fi
-        ./steamcmd.sh +@sSteamCmdForcePlatformType windows +force_install_dir "\(targetDir)" +login "$STEAM_USER" "$STEAM_PASS" "$STEAM_CODE" +app_update 975370 validate +quit
-        echo "975370" > "\(targetDir)/steam_appid.txt"
-        echo "✅ Download complete: \(targetDir)"
+        echo -n "Steam Username: "
+        read -r STEAM_USER
+        ./steamcmd.sh +@sSteamCmdForcePlatformType windows +force_install_dir "$TARGET_DIR" +login "$STEAM_USER" +app_update 975370 validate +quit
+        echo "975370" > "$TARGET_DIR/steam_appid.txt"
+        echo "✅ Download complete: $TARGET_DIR"
         """
         
         try? scriptContent.write(toFile: scriptPath, atomically: true, encoding: .utf8)

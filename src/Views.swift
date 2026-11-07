@@ -205,25 +205,18 @@ struct LaunchDashboardTab: View {
                             HStack(spacing: 10) {
                                 Text("Steam:")
                                     .fontWeight(.medium)
-                                Button(vm.tr("Steam Console (Copy Depot Cmd)", "唤起 Steam 控制台 (复制下载指令)")) {
+                                Button(vm.tr("Open Steam Console (Copy Depot Cmd)", "唤起 Steam 控制台 (复制下载指令)")) {
                                     vm.openMacSteamConsoleDepotDownload()
                                 }
                                 .buttonStyle(.borderedProminent)
                                 .tint(.green)
                                 
-                                Divider()
-                                    .frame(height: 18)
-                                
-                                TextField(vm.tr("Steam User", "Steam 账号"), text: $vm.steamUsername)
-                                    .textFieldStyle(.roundedBorder)
-                                    .frame(width: 115)
-                                TextField(vm.tr("Guard Code", "5位令牌码"), text: $vm.steamGuardCode)
-                                    .textFieldStyle(.roundedBorder)
-                                    .frame(width: 90)
-                                Button("SteamCMD") {
+                                Button(vm.tr("Download via Official SteamCMD", "使用官方 SteamCMD 下载")) {
                                     vm.downloadSteamEditionViaTerminal()
                                 }
                                 .buttonStyle(.bordered)
+                                
+                                Spacer()
                             }
                         }
                     }

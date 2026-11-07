@@ -21,7 +21,7 @@
 - **Zero Pre-installed Dependencies**: Automatically detects whether **Rosetta 2**, **Wine 11.21 (Metal/MoltenVK)**, and the **64-bit Wine Prefix** are installed, and downloads/initializes them inside the app with one click.
 - **Classic & Steam Edition (`AppID 975370`)**:
   - Plug in any local Classic or Steam Dwarf Fortress directory.
-  - Built-in **1-Click Steam Console Depot Downloader** (`download_depot 975370 975371`) and **SteamCMD (with 5-digit Steam Guard code)** integration.
+  - Built-in **1-Click Steam Console Depot Downloader** (`download_depot 975370 975371`) and official **SteamCMD** integration.
 - **Native DFHack Integration**:
   - 1-click download, installation, and toggle for **DFHack** (`dfhooks_dfhack.ini` -> `hack/dfhooks_dfhack.dll`).
   - Visual toggles for popular startup plugins (`autolabor`, `autofarm`, `autobutcher`, `autochop`, `tailor`, `prioritize`, `fastdwarf`, `stonesense`) and built-in `dfhack.init` script editor.
@@ -43,6 +43,19 @@
    - Click **Auto-Install Runtime** (or click **Setup Runtime & Launch**) — the launcher will automatically install Rosetta 2, download Wine 11.21, and initialize the Wine container.
    - Select your local **Classic** or **Steam** Dwarf Fortress folder (or download the Steam edition directly from the **Steam** tab).
    - Enable **DFHack**, configure your mods, and click **Launch Dwarf Fortress**!
+
+---
+
+## 🔒 Security, Transparency & Credits
+
+- **100% Open Source & Reproducible CI Builds**: All release binaries (`.dmg` and `.zip`) are compiled and ad-hoc signed directly on GitHub Actions (`macos-latest`) via [`.github/workflows/release.yml`](.github/workflows/release.yml) with published `SHA256SUMS.txt`.
+- **No Proprietary Game Files**: This repository and its releases contain **zero** game binaries or third-party mods. You must provide your own copy of Dwarf Fortress (Classic from Bay 12 Games or Steam Edition).
+- **Zero Credential Collection**: The launcher never asks for, stores, or transmits any Steam credentials or telemetry.
+- **Official Upstream Sources**:
+  - Wine Runtime: [Gcenx/macOS_Wine_builds](https://github.com/Gcenx/macOS_Wine_builds)
+  - DFHack: [DFHack/dfhack](https://github.com/DFHack/dfhack)
+  - Chinese Localization: [pokemonchw/dfcn](https://github.com/pokemonchw/dfcn)
+  - Dwarf Fortress is developed by [Bay 12 Games](https://www.bay12games.com/dwarves/) and published by Kitfox Games. This is an unofficial community tool.
 
 ---
 
