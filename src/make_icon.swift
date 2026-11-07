@@ -1,11 +1,10 @@
 import AppKit
 import CoreGraphics
 
-let home = NSHomeDirectory()
-let logoPath = "\(home)/Library/Application Support/Steam/steamapps/content/app_975370/depot_975371/data/art/df_logo.png"
-let bgArtPath = "\(home)/Library/Application Support/Steam/steamapps/content/app_975370/depot_975371/data/art/title_background.png"
-
+let scriptDir = URL(fileURLWithPath: CommandLine.arguments[0]).deletingLastPathComponent().path
+let artworkPath = "\(scriptDir)/icon_artwork.jpg"
 let iconsetDir = "/tmp/AppIcon.iconset"
+
 try? FileManager.default.removeItem(atPath: iconsetDir)
 try! FileManager.default.createDirectory(atPath: iconsetDir, withIntermediateDirectories: true)
 
@@ -31,84 +30,28 @@ func renderIcon(size: Int) -> Data? {
     let cornerRadius = rect.width * 0.225
     let squircle = NSBezierPath(roundedRect: rect, xRadius: cornerRadius, yRadius: cornerRadius)
     
-    // Outer shadow
+    // Outer drop shadow
     ctx.saveGState()
     ctx.setShadow(offset: CGSize(width: 0, height: -s * 0.025), blur: s * 0.045, color: NSColor(calibratedWhite: 0, alpha: 0.65).cgColor)
-    NSColor(calibratedRed: 0.12, green: 0.10, blue: 0.09, alpha: 1.0).setFill()
+    NSColor(calibratedRed: 0.08, green: 0.06, blue: 0.06, alpha: 1.0).setFill()
     squircle.fill()
     ctx.restoreGState()
     
-    // Clip to squircle
+    // Clip to macOS squircle
     ctx.saveGState()
     squircle.addClip()
     
-    // Deep volcanic / obsidian gradient background
-    let gradColors = [
-        NSColor(calibratedRed: 0.22, green: 0.14, blue: 0.11, alpha: 1.0).cgColor,
-        NSColor(calibratedRed: 0.11, green: 0.09, blue: 0.09, alpha: 1.0).cgColor,
-        NSColor(calibratedRed: 0.06, green: 0.05, blue: 0.06, alpha: 1.0).cgColor
-    ] as CFArray
-    if let grad = CGGradient(colorsSpace: colorSpace, colors: gradColors, locations: [0.0, 0.55, 1.0]) {
-        ctx.drawLinearGradient(
-            grad,
-            start: CGPoint(x: s * 0.5, y: rect.maxY),
-            end: CGPoint(x: s * 0.5, y: rect.minY),
-            options: []
-        )
+    if let artImg = NSImage(contentsOfFile: artworkPath),
+       let artCG = artImg.cgImage(forProposedRect: nil, context: nil, hints: nil) {
+        ctx.interpolationQuality = .high
+        ctx.draw(artCG, in: rect)
     }
     
-    // Optional subtle background art overlay if available
-    if let bgImg = NSImage(contentsOfFile: bgArtPath),
-       let bgCG = bgImg.cgImage(forProposedRect: nil, context: nil, hints: nil) {
-        ctx.saveGState()
-        ctx.setAlpha(0.18)
-        ctx.interpolationQuality = .none
-        ctx.draw(bgCG, in: rect)
-        ctx.restoreGState()
-    }
-    
-    // Inner glowing rim
+    // Glowing inner border
     let borderPath = NSBezierPath(roundedRect: rect.insetBy(dx: s * 0.008, dy: s * 0.008), xRadius: cornerRadius * 0.96, yRadius: cornerRadius * 0.96)
     borderPath.lineWidth = max(1.5, s * 0.015)
-    NSColor(calibratedRed: 0.85, green: 0.45, blue: 0.18, alpha: 0.65).setStroke()
+    NSColor(calibratedRed: 0.88, green: 0.48, blue: 0.18, alpha: 0.72).setStroke()
     borderPath.stroke()
-    
-    if let logoImg = NSImage(contentsOfFile: logoPath),
-       let logoCG = logoImg.cgImage(forProposedRect: nil, context: nil, hints: nil) {
-        // Crop the iconic Red-Bearded Dwarf head from df_logo.png (x: 112..224, y: 208..368 in top-left coords)
-        let cropRect = CGRect(x: 112, y: 208, width: 112, height: 160)
-        if let dwarfHeadCG = logoCG.cropping(to: cropRect) {
-            ctx.saveGState()
-            ctx.interpolationQuality = .none
-            ctx.setShadow(offset: CGSize(width: 0, height: -s * 0.02), blur: s * 0.03, color: NSColor.black.cgColor)
-            
-            let headHeight = rect.height * 0.48
-            let headWidth = headHeight * (112.0 / 160.0)
-            let headRect = CGRect(
-                x: (s - headWidth) * 0.5,
-                y: rect.minY + rect.height * 0.43,
-                width: headWidth,
-                height: headHeight
-            )
-            ctx.draw(dwarfHeadCG, in: headRect)
-            ctx.restoreGState()
-        }
-        
-        // Draw the full "DWARF FORTRESS" logo across the bottom portion
-        ctx.saveGState()
-        ctx.interpolationQuality = .none
-        ctx.setShadow(offset: CGSize(width: 0, height: -s * 0.012), blur: s * 0.02, color: NSColor.black.cgColor)
-        let logoW = rect.width * 0.84
-        let logoH = logoW * (373.0 / 907.0)
-        let logoDrawRect = CGRect(
-            x: (s - logoW) * 0.5,
-            y: rect.minY + rect.height * 0.07,
-            width: logoW,
-            height: logoH
-        )
-        ctx.draw(logoCG, in: logoDrawRect)
-        ctx.restoreGState()
-    }
     
     ctx.restoreGState()
     
@@ -135,4 +78,4 @@ for (name, px) in sizes {
         try! data.write(to: URL(fileURLWithPath: "\(iconsetDir)/\(name)"))
     }
 }
-print("Generated iconset successfully!")
+print("✅ Generated iconset from original pixel artwork!")
